@@ -4,6 +4,9 @@ bin
 # Cmake build
 build
 
+# pthread
+!pthread/dll/x86/pthreadGC2.dll
+
 # Prerequisites
 *.d
 
@@ -20,7 +23,6 @@ build
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
 
 # Fortran module files
 *.mod
@@ -29,8 +31,6 @@ build
 # Compiled Static libraries
 *.lai
 *.la
-*.a
-*.lib
 
 # Executables
 *.exe
