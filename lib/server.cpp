@@ -52,40 +52,27 @@ bool checkPath(const fs::path &path, bool isDir)
  */
 int idVerify(int sock_fd)
 {
-    const char *signin = "1";
-    const char *signup = "2";
-    const char *success = "1";
-    const char *fail = "-1";
-
-    char Key[100] = {0};
-
-    fs::path passFile = "password.txt";
-    checkPath(passFile, false);
-
-    // 接受用户的登录选项
     char signkind[5] = {0};
     recv(sock_fd, signkind, sizeof(signkind), 0);
-
-    if (strcmp(signkind, signin) == 0) // 验证登录
+    char signin[] = "1";
+    char signup[] = "2";
+    if (strcmp(signkind, signin) == 0)
     {
-        // 打开用户身份文件
-        ifstream inFile(passFile, ios::in);
-
-        // 打开失败
+        ifstream inFile("password.txt", ios::in);
         if (!inFile)
-        {
+        { // 打开失败
             cout << "error opening source file." << endl;
             return 0;
         }
-
+        char Key[100] = {0};
         string passwd;
+        char success[] = "1";
+        char fail[] = "-1";
         int if_sign = 0;
-        while (true)
+        while (1)
         {
-            // 接受用户名
             if (recv(sock_fd, Key, sizeof(Key), 0) > 0)
             {
-                // 查找用户是否已经注册
                 inFile.clear();
                 inFile.seekg(0, std::ios::beg);
                 while (!inFile.eof())
@@ -95,32 +82,28 @@ int idVerify(int sock_fd)
                     if (strcmp(Key, passwd.c_str()) == 0)
                     {
                         if_sign = 1;
-                        cout << "User " << Key << " login successfully." << endl;
+                        cout << "User " << Key << " has login." << endl;
                         send(sock_fd, success, (int)strlen(success), 0);
                         break;
                     }
                 }
-
-                if (if_sign == 0)
+                if (if_sign == 1)
                     break;
-
-                // 登录失败
                 format(Key, sizeof(Key));
-                cout << "User " << Key << " is trying to login..." << endl;
+                // memset(passwd,'\0',sizeof(passwd));
+                cout << "User " << Key << " is trying to login." << endl;
                 send(sock_fd, fail, (int)strlen(fail), 0);
             }
         }
-
-        if (if_sign == 0)
-            inFile.close();
+        inFile.close();
         return 1;
     }
-    else if (strcmp(signkind, signup) == 0) // 验证注册
+    else if (strcmp(signkind, signup) == 0)
     {
-        ofstream outFile(passFile, ios::app); // 以文本模式打开
+        ofstream outFile("password.txt", ios::app); // 以文本模式打开out.txt备写
         outFile.seekp(0, ios::end);
-
-        // 接受用户名
+        char Key[100] = {0};
+        char success[] = "1";
         recv(sock_fd, Key, sizeof(Key), 0);
         outFile << Key << endl;
         outFile.close();
@@ -128,7 +111,6 @@ int idVerify(int sock_fd)
         return 0;
     }
 
-    // never reached, just make g++ happy :)
     return 0;
 }
 
@@ -139,29 +121,24 @@ int idVerify(int sock_fd)
  */
 void ftpOfflineRecv(int sock_fd, CMD cmd)
 {
-
-    fs::path saveDir = "./Downloads";
-    checkPath(saveDir, true);
-
-    fs::path saveFile = saveDir / format(cmd.filename, sizeof(cmd.filename));
-
+    char path[MAX_BUFF_LEN] = "./Downloads/";
+    strcat(path, cmd.filename);
+    format(path, sizeof(path));
+    FILE *fp = fopen(path, "ab");    // 以二进制方式打开（创建）文件，指针自动定位到文件末尾
+    char buffer[MAX_BUFF_LEN] = {0}; // 文件缓冲区
     int nCount;
     int sum = 0;
-    char buffer[MAX_BUFF_LEN] = {0};          // 文件缓冲区
-    FILE *fp = fopen(saveFile.c_str(), "ab"); // 以二进制方式打开（创建）文件，指针自动定位到文件末尾
 
-    while (true)
+    while (1)
     {
-        // 接受文件长度
         nCount = recv(sock_fd, buffer, MAX_BUFF_LEN, 0);
         cout << "recv signal: " << nCount << endl;
-
         if (strncmp(buffer, "FTPfin", 6) == 0)
             break;
-
-        // 接受文件内容
         if (nCount > 0)
+        {
             fwrite(buffer, nCount, 1, fp);
+        }
         else
             break;
         sum += nCount;
@@ -169,7 +146,6 @@ void ftpOfflineRecv(int sock_fd, CMD cmd)
     cout << "sum bytes received: " << sum << endl;
     fclose(fp);
 
-    // rename file
     char newname[MAX_BUFF_LEN] = "./Downloads/";
     int len = strlen(cmd.filename);
     strncat(newname, cmd.filename, len - 4);
@@ -185,12 +161,11 @@ void ftpOfflineSend(int sock_fd, CMD cmd)
 {
     sleep(1);
     cout << "cmd.filename= " << cmd.filename << endl;
-
-    fs::path saveDir = "./Downloads";
-    fs::path sendFilePath = saveDir / format(cmd.filename, sizeof(cmd.filename));
-
-    cout << "full name= " << sendFilePath << endl;
-    FILE *fp = fopen(sendFilePath.c_str(), "rb");
+    char path[MAX_BUFF_LEN] = "./Downloads/";
+    strcat(path, cmd.filename);
+    format(path, sizeof(path));
+    cout << "full name= " << path << endl;
+    FILE *fp = fopen(path, "rb");
 
     if (fp == NULL)
     {
@@ -198,7 +173,9 @@ void ftpOfflineSend(int sock_fd, CMD cmd)
         cout << "errno: " << errno << endl;
     }
     else
+    {
         printf("Opening file...\n");
+    }
 
     int nCount;
     char sendbuf[MAX_BUFF_LEN] = {0};
@@ -245,14 +222,13 @@ void ftpOnline(int FTP_SEND)
 
     cout << "FTP online" << endl;
 
-    while (true)
+    while (1)
     {
         recv_ret = recv(ftp_fd[FTP_SEND], ftp_buffer, MAX_BUFF_LEN, 0);
         if (recv_ret > 0)
         {
             cout << "recv signal: " << recv_ret << endl;
-
-            if (strncmp(ftp_buffer, "FTPfin", 6) == 0) // 接收文件
+            if (strncmp(ftp_buffer, "FTPfin", 6) == 0)
             {
                 sleep(1);
                 char fin[] = "FTPfin";
@@ -260,7 +236,7 @@ void ftpOnline(int FTP_SEND)
                 cout << "send FTPfin." << endl;
                 break;
             }
-            else // 传输文件
+            else
             {
                 send_ret = send(ftp_fd[FTP_RECV], ftp_buffer, recv_ret, 0);
                 cout << "send signal: " << send_ret << endl;
