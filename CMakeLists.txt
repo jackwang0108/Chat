@@ -58,6 +58,9 @@ if(WIN32)
         PRIVATE "client/pthread/include"
     )
 
+    # 防止windows重定义
+    target_compile_definitions(client PRIVATE HAVE_STRUCT_TIMESPEC)
+
     # 链接静态库
     set(PTHREAD_LIB_PATH "${CMAKE_SOURCE_DIR}/client/pthread/lib/x64")
 
@@ -90,9 +93,7 @@ if(WIN32)
     )
 
     # 在运行时动态加载 DLL
-    configure_file("${PTHREAD_DLL_PATH}/pthreadVC2.dll" "${CMAKE_CURRENT_BINARY_DIR}/pthreadVC2.dll" COPYONLY)
-
-    configure_file("${PTHREAD_DLL_PATH}/pthreadVC2.dll" "${CMAKE_CURRENT_BINARY_DIR}/pthreadVC2.dll" COPYONLY)
-    configure_file("${WINDOWS_SYSTEM_DLL_PATH}/msvcp140d.dll" "${CMAKE_CURRENT_BINARY_DIR}/msvcp140d.dll" COPYONLY)
-    configure_file("${WINDOWS_SYSTEM_DLL_PATH}/vcruntime140d.dll" "${CMAKE_CURRENT_BINARY_DIR}/vcruntime140d.dll" COPYONLY)
+    # configure_file("${PTHREAD_DLL_PATH}/pthreadVC2.dll" "${CMAKE_CURRENT_BINARY_DIR}/pthreadVC2.dll" COPYONLY)
+    # configure_file("${WINDOWS_SYSTEM_DLL_PATH}/msvcp140d.dll" "${CMAKE_CURRENT_BINARY_DIR}/msvcp140d.dll" COPYONLY)
+    # configure_file("${WINDOWS_SYSTEM_DLL_PATH}/vcruntime140d.dll" "${CMAKE_CURRENT_BINARY_DIR}/vcruntime140d.dll" COPYONLY)
 endif()
