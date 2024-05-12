@@ -27,25 +27,27 @@ target_include_directories(
     PUBLIC "include"
 )
 
-# 服务端
-add_executable(
-    server
-    "server.cpp"
-    "lib/server.cpp"
-)
+# 服务端, 默认在Linux上编译
+if(UNIX AND NOT APPLE)
+    add_executable(
+        server
+        "server.cpp"
+        "lib/server.cpp"
+    )
 
-target_include_directories(
-    server
-    PRIVATE "include"
-)
+    target_include_directories(
+        server
+        PRIVATE "include"
+    )
 
-target_link_libraries(
-    server
-    pthread
-    common
-)
+    target_link_libraries(
+        server
+        pthread
+        common
+    )
+endif()
 
-# 客户端
+# 客户端, 默认在Windows上编译
 if(WIN32)
     add_executable(
         client
@@ -96,7 +98,7 @@ if(WIN32)
     )
 
     # 在运行时动态加载 DLL
-    # configure_file("${PTHREAD_DLL_PATH}/pthreadVC2.dll" "${CMAKE_CURRENT_BINARY_DIR}/pthreadVC2.dll" COPYONLY)
-    # configure_file("${WINDOWS_SYSTEM_DLL_PATH}/msvcp140d.dll" "${CMAKE_CURRENT_BINARY_DIR}/msvcp140d.dll" COPYONLY)
-    # configure_file("${WINDOWS_SYSTEM_DLL_PATH}/vcruntime140d.dll" "${CMAKE_CURRENT_BINARY_DIR}/vcruntime140d.dll" COPYONLY)
+    configure_file("${PTHREAD_DLL_PATH}/pthreadVC2.dll" "${CMAKE_CURRENT_BINARY_DIR}/pthreadVC2.dll" COPYONLY)
+    configure_file("${WINDOWS_SYSTEM_DLL_PATH}/msvcp140d.dll" "${CMAKE_CURRENT_BINARY_DIR}/msvcp140d.dll" COPYONLY)
+    configure_file("${WINDOWS_SYSTEM_DLL_PATH}/vcruntime140d.dll" "${CMAKE_CURRENT_BINARY_DIR}/vcruntime140d.dll" COPYONLY)
 endif()
