@@ -61,6 +61,9 @@ if(WIN32)
     # 防止windows重定义
     target_compile_definitions(client PRIVATE HAVE_STRUCT_TIMESPEC)
 
+    # 不要产生警告
+    target_compile_options(client PRIVATE /w)
+
     # 链接静态库
     set(PTHREAD_LIB_PATH "${CMAKE_SOURCE_DIR}/client/pthread/lib/x64")
 
